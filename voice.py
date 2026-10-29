@@ -1,7 +1,10 @@
 """台語配音產音：lines.json 裡每一句台語漢字 → 意傳轉台羅 → 意傳合成 → audio/<id>.mp3。
 
-python3 voice.py examples/ato              # 資料夾裡要有 lines.json
-python3 voice.py examples/ato --vc 'cmd {src} {dst}'   # 合成後再換聲（例如 Seed-VC），{src} {dst} 是 wav 路徑
+python3 voice.py examples/ember              # 資料夾裡要有 lines.json
+python3 voice.py examples/ember --vc 'HOST=ct@機器 vc/seed-vc-ssh.sh {src} {ref} {dst}'
+
+換聲：lines.json 的 "voices" 寫「角色 → 參考聲音」，有寫的角色合成後再換聲，沒寫的角色維持意傳原聲。
+{src} {ref} {dst} 會換成 wav 路徑（{ref} 相對於資料夾）。
 
 要重產的句子：
 - 改了台語漢字、台羅清空 → 重新轉台羅、重新合成
@@ -38,7 +41,7 @@ def synth(kip, path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('dir')
-    ap.add_argument('--vc', help="換聲指令，{src} {dst} 會換成 wav 路徑")
+    ap.add_argument('--vc', help="換聲指令，{src} {ref} {dst} 會換成 wav 路徑")
     a = ap.parse_args()
     f = os.path.join(a.dir, 'lines.json')
     doc = json.load(open(f, encoding='utf-8'))
@@ -53,15 +56,16 @@ def main():
             print(ln['id'], '台羅', ln['kip'], flush=True)
             time.sleep(GAP)
         synth(ln['kip'], mp3)
-        if a.vc:   # ponytail: 一句載一次模型，句子多再改成整批接起來換
+        ref = doc.get('voices', {}).get(ln['speaker'], {}).get('ref')
+        if a.vc and ref:   # ponytail: 一句載一次模型，句子多再改成同一個參考聲音整批接起來換
             wav, out = mp3[:-4] + '.src.wav', mp3[:-4] + '.vc.wav'
             subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', mp3, '-ar', '22050', '-ac', '1', wav], check=True)
-            subprocess.run(a.vc.format(src=wav, dst=out), shell=True, check=True)
+            subprocess.run(a.vc.format(src=wav, ref=os.path.join(a.dir, ref), dst=out), shell=True, check=True)
             subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', out, '-af', 'loudnorm=I=-18:TP=-2', '-b:a', '96k', mp3], check=True)
             os.remove(wav); os.remove(out)
         ln['status'] = 'todo'
         ln['audio'] = 'audio/' + ln['id'] + '.mp3'
-        print(ln['id'], '合成好', flush=True)
+        print(ln['id'], '合成好' + ('，換成 ' + ref if a.vc and ref else ''), flush=True)
         save()
         time.sleep(GAP)
     save()

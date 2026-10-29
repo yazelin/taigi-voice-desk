@@ -6,8 +6,8 @@
 
 ## 流程
 
-1. 準備一個資料夾，放 `lines.json`（格式見 [SKILL.md](SKILL.md)，或看 `examples/ato/`）。
-2. 產音：`python3 voice.py 資料夾`。台語漢字經[意傳](https://ithuan.tw/)轉成台羅，再合成成 `audio/<id>.mp3`。要換成角色的聲音就加 `--vc '換聲指令 {src} {dst}'`。
+1. 準備一個資料夾，放 `lines.json`（格式見 [SKILL.md](SKILL.md)，或看 `examples/ember/`）。
+2. 產音：`python3 voice.py 資料夾`。台語漢字經[意傳](https://ithuan.tw/)轉成台羅，再合成成 `audio/<id>.mp3`。要換成角色的聲音，在 `lines.json` 的 `voices` 寫每個角色用哪段參考聲音，再加 `--vc '換聲指令 {src} {ref} {dst}'`。範例 `examples/ember/` 是《餘燼》的阿桃姨（意傳原聲）和余伯（換成中年男聲）。
 3. 開確認頁，按「開資料夾」：
    - 每個字上面標著意傳的讀音，唸錯一眼看得出是哪個字
    - 改台羅，按「照台羅試聽」當場聽

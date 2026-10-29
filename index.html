@@ -72,7 +72,7 @@ function render() {
   $('#ttl').textContent = doc.title || '台語配音確認台';
   $('#list').innerHTML = doc.lines.map(function (l, i) {
     return '<section class="ln" data-i="' + i + '" data-s="' + (l.status || 'todo') + '">' +
-      '<div class="top"><b>' + esc(l.speaker) + '</b><span>' + esc(l.id) + '</span><span class="chip">' + LABEL[l.status || 'todo'] + '</span></div>' +
+      '<div class="top"><b>' + esc(l.speaker) + '</b><span>' + esc(l.id) + '</span>' + (doc.voices && doc.voices[l.speaker] ? '<span title="試聽是意傳原聲，音檔才有換聲">換聲：' + esc(doc.voices[l.speaker].ref) + '</span>' : '') + '<span class="chip">' + LABEL[l.status || 'todo'] + '</span></div>' +
       '<div class="seg">' + seg(l) + '</div>' + (l.zh ? '<div class="zh">' + esc(l.zh) + '</div>' : '') +
       '<label>台語漢字（改了會清掉台羅，下次產音重新轉）</label><input data-k="hanzi" value="' + esc(l.hanzi) + '">' +
       '<label>台羅（唸錯就改這裡，按「照台羅試聽」先聽）</label><input class="kip" data-k="kip" value="' + esc(l.kip) + '">' +
@@ -166,8 +166,8 @@ $('#pick').onchange = async function () {
 };
 $('#demo').onclick = async function () {
   dir = null;
-  var d = await (await fetch('examples/ato/lines.json')).json();
-  d.base = 'examples/ato/';   // ponytail: 範例音檔不進 repo，播不到就按「照台羅試聽」
+  var d = await (await fetch('examples/ember/lines.json')).json();
+  d.base = 'examples/ember/';   // ponytail: 範例音檔不進 repo，播不到就按「照台羅試聽」
   load(d, '範例');
 };
 $('#save').onclick = async function () {

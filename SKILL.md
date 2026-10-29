@@ -52,17 +52,29 @@ description: 台語配音的產音與人工確認流程。台語漢字經意傳�
 
 ## 換聲
 
-意傳只有一種聲音。要換成角色的聲音就加 `--vc`，指令裡的 `{src}`、`{dst}` 會換成 wav 路徑：
+意傳只有一種女聲。要換成角色的聲音，在 `lines.json` 寫一張「角色 → 參考聲音」對照表，產音時加 `--vc`：
 
-```bash
-python3 voice.py <資料夾> --vc 'ssh ct@192.168.11.11 ...seed-vc inference... {src} {dst}'
+```json
+{"title": "…",
+ "voices": {"余伯": {"ref": "refs/dad.wav", "note": "Larch_Mandarin_Dad 的華語錄音當參考"}},
+ "lines": […]}
 ```
 
-Seed-VC 一定要開音高控制（`--f0-condition True --auto-f0-adjust True`），不開會把音高拉到 140 Hz 上下，小孩聽起來像男人。目前是一句載一次模型；句子多時可以參考 larch-ember 的 `src/taigi.py`，把同一個參考聲音的句子接成一段一起換，再照秒數切回。
+```bash
+python3 voice.py <資料夾> --vc 'HOST=使用者@機器 vc/seed-vc-ssh.sh {src} {ref} {dst}'
+```
+
+- `ref` 相對於資料夾，是一段 10 秒左右的 wav，聲音就照它換。參考聲音可以是華語，換的是音色不是唸法。
+- `voices` 裡沒寫的角色維持意傳原聲；不加 `--vc` 就全部是原聲。
+- `{src}`、`{ref}`、`{dst}` 會換成 wav 路徑，所以 `--vc` 可以換成任何換聲工具。`vc/seed-vc-ssh.sh` 是把檔案送到另一台有 Seed-VC 的機器換完再拿回來。
+- Seed-VC 一定要開音高控制（`--f0-condition True --auto-f0-adjust True`，包裝腳本已經開了）。不開會把音高拉到 140 Hz 上下，小孩聽起來像男人。
+- 參考聲音的檔案不進 git（`refs/` 已在 .gitignore）。
+- 目前一句載一次模型；句子多時可以參考 larch-ember 的 `src/taigi.py`，把同一個參考聲音的句子接成一段一起換，再照秒數切回。
+- 改了 `voices` 想讓某個角色全部重換：把那些句子的 `status` 改成 `redo` 再跑。
 
 ## 已知的坑
 
 - 意傳的 `GET /tau` 2026-10 起常回 500，voice.py 用 POST。
 - 意傳 API 沒開 CORS，網頁讀不到台羅轉換結果，所以台羅只能由 voice.py 轉。網頁上的「照台羅試聽」是直接把 `<audio>` 指到合成網址，這條不受 CORS 擋，作者改完台羅可以當場聽。
-- 「照台羅試聽」是意傳原聲，沒有換聲；確認唸法用它，確認聲音要聽產好的音檔。
+- 「照台羅試聽」是意傳原聲，沒有換聲（余伯也會是女聲）；確認唸法用它，確認聲音要聽產好的音檔。
 - 音檔不進 git（意傳 demo 的產出，授權沒寫清楚）。
