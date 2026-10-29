@@ -1,6 +1,14 @@
 {
  "title": "《餘燼》阿桃姨與余伯",
  "voices": {
+  "阿桃姨": {
+   "ref": "refs/antie.wav",
+   "note": "2026 年的阿桃姨：Kind-hearted_Antie"
+  },
+  "阿桃姨（1988）": {
+   "ref": "refs/aunt.wav",
+   "note": "1988 年的阿桃姨，比較年輕：Warm-HeartedAunt"
+  },
   "余伯": {
    "ref": "refs/dad.wav",
    "note": "Larch_Mandarin_Dad 的華語錄音當參考"
@@ -9,7 +17,7 @@
  "lines": [
   {
    "id": "9039df8cf2",
-   "speaker": "阿桃姨",
+   "speaker": "阿桃姨（1988）",
    "hanzi": "淑靜仔，遮嘛沖一下。",
    "zh": "淑靜，這裡也沖一下。",
    "kip": "siok tsīng ah,tsia mā tshiâng tsi̍t-ē.",
