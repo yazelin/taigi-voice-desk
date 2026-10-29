@@ -1,0 +1,60 @@
+{
+ "title": "《餘燼》阿桃姨",
+ "lines": [
+  {
+   "id": "9039df8cf2",
+   "speaker": "阿桃姨",
+   "hanzi": "淑靜仔，遮嘛沖一下。",
+   "zh": "淑靜，這裡也沖一下。",
+   "kip": "siok tsīng ah,tsia mā tshiâng tsi̍t-ē.",
+   "status": "todo",
+   "note": "",
+   "seg": "淑｜siok 靜｜tsīng 仔｜ah ，｜, 遮｜tsia 嘛｜mā 沖｜tshiâng 一-下｜tsi̍t-ē 。｜.",
+   "audio": "audio/9039df8cf2.mp3"
+  },
+  {
+   "id": "42f021179c",
+   "speaker": "阿桃姨",
+   "hanzi": "我去市場，恁去街仔路揣。",
+   "zh": "我去市場，你們去老街找。",
+   "kip": "guá khì tshī-tiûnn,lín khì ke-á-lōo tshuē.",
+   "status": "todo",
+   "note": "",
+   "seg": "我｜guá 去｜khì 市-場｜tshī-tiûnn ，｜, 恁｜lín 去｜khì 街-仔-路｜ke-á-lōo 揣｜tshuē 。｜.",
+   "audio": "audio/42f021179c.mp3"
+  },
+  {
+   "id": "032e3e0c5b",
+   "speaker": "阿桃姨",
+   "hanzi": "淑靜仔細漢的時陣，攏佇遐等伊阿爸。",
+   "zh": "淑靜小時候，都在那裡等她阿爸。",
+   "kip": "siok tsīng á sè-hàn ê sî-tsūn,lóng tī-hia tán i A-pah.",
+   "status": "todo",
+   "note": "",
+   "seg": "淑｜siok 靜｜tsīng 仔｜á 細-漢｜sè-hàn 的｜ê 時-陣｜sî-tsūn ，｜, 攏｜lóng 佇-遐｜tī-hia 等｜tán 伊｜i 阿-爸｜A-pah 。｜.",
+   "audio": "audio/032e3e0c5b.mp3"
+  },
+  {
+   "id": "66eaa6ffec",
+   "speaker": "阿桃姨",
+   "hanzi": "報紙有寫恁彼工的演唱會，我提來予恁看。",
+   "zh": "報紙寫了你們那天的演唱會，我拿來給你們看。",
+   "kip": "pò-tsuá ū siá lín Hit-kang ê ián-tshiùnn-huē,guá the̍h-lâi hōo lín khuànn.",
+   "status": "todo",
+   "note": "",
+   "seg": "報-紙｜pò-tsuá 有｜ū 寫｜siá 恁｜lín 彼-工｜Hit-kang 的｜ê 演-唱-會｜ián-tshiùnn-huē ，｜, 我｜guá 提-來｜the̍h-lâi 予｜hōo 恁｜lín 看｜khuànn 。｜.",
+   "audio": "audio/66eaa6ffec.mp3"
+  },
+  {
+   "id": "edfae0f7c1",
+   "speaker": "阿桃姨",
+   "hanzi": "我猶有一袋欲送隔壁，恁先食。",
+   "zh": "我還有一袋要送隔壁，你們先吃。",
+   "kip": "Guá iáu-ū tsi̍t tē beh sàng keh-piah,lín sing tsia̍h.",
+   "status": "todo",
+   "note": "",
+   "seg": "我｜Guá 猶-有｜iáu-ū 一｜tsi̍t 袋｜tē 欲｜beh 送｜sàng 隔-壁｜keh-piah ，｜, 恁｜lín 先｜sing 食｜tsia̍h 。｜.",
+   "audio": "audio/edfae0f7c1.mp3"
+  }
+ ]
+}

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>台語配音確認台</title>
+<style>
+:root{--bg:#f6f3ee;--card:#fff;--ink:#1d1b18;--muted:#6b665e;--line:#e2ddd4;--acc:#b5532a;--ok:#2f7d4f;--ok-bg:#e5f3ea;--redo:#a33a2a;--redo-bg:#fbe9e5;--todo-bg:#eeebe5;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15130f;--card:#1f1c18;--ink:#f1ece4;--muted:#a39d93;--line:#38332c;--acc:#f0925d;--ok:#7fd3a0;--ok-bg:#1d3326;--redo:#ff9d8c;--redo-bg:#3a201b;--todo-bg:#2a2620;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15130f;--card:#1f1c18;--ink:#f1ece4;--muted:#a39d93;--line:#38332c;--acc:#f0925d;--ok:#7fd3a0;--ok-bg:#1d3326;--redo:#ff9d8c;--redo-bg:#3a201b;--todo-bg:#2a2620;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+header{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+h1{font-size:17px;margin:0 12px 0 0}
+#stat{color:var(--muted);font-size:13px;margin-right:auto}
+button{font:inherit;font-size:14px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--acc)}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+main{max-width:860px;margin:0 auto;padding:16px}
+.hint{color:var(--muted);font-size:13px;margin:0 0 16px}
+kbd{font:12px ui-monospace,monospace;border:1px solid var(--line);border-radius:4px;padding:0 4px;background:var(--card)}
+.ln{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.ln.on{outline:2px solid var(--acc);outline-offset:1px}
+.ln[data-s="ok"]{border-left-color:var(--ok)}.ln[data-s="redo"]{border-left-color:var(--redo)}
+.top{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.top b{color:var(--ink)}
+.chip{margin-left:auto;padding:1px 8px;border-radius:99px;background:var(--todo-bg)}
+.ln[data-s="ok"] .chip{background:var(--ok-bg);color:var(--ok)}.ln[data-s="redo"] .chip{background:var(--redo-bg);color:var(--redo)}
+.seg{font-size:22px;line-height:2.4;margin:4px 0 0}
+.seg ruby{margin-right:.15em}.seg rt{font-size:12px;color:var(--acc);font-family:ui-sans-serif,system-ui,sans-serif}
+.zh{color:var(--muted);font-size:13px}
+label{display:block;font-size:12px;color:var(--muted);margin-top:8px}
+input,textarea{width:100%;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+input.kip{font-family:ui-sans-serif,system-ui,sans-serif}
+textarea{min-height:2.2em;resize:vertical}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.stale{color:var(--redo);font-size:12px}
+#empty{text-align:center;color:var(--muted);padding:48px 0}
+@media (max-width:560px){.seg{font-size:19px}}
+</style></head>
+<body>
+<header>
+ <h1 id="ttl">台語配音確認台</h1><span id="stat"></span>
+ <button id="open" class="pri">開資料夾</button>
+ <button id="demo">看範例</button>
+ <button id="save">存回 lines.json</button>
+ <button id="ai">複製給 AI</button>
+</header>
+<main>
+ <p class="hint">資料夾裡放 <code>lines.json</code> 和 <code>audio/</code>（<code>python3 voice.py 資料夾</code> 產的）。
+ <kbd>↑</kbd><kbd>↓</kbd> 換句　<kbd>空白</kbd> 播音檔　<kbd>T</kbd> 照台羅試聽　<kbd>1</kbd> 通過　<kbd>2</kbd> 重做　<kbd>N</kbd> 寫備註　<kbd>Esc</kbd> 離開輸入框</p>
+ <div id="list"><p id="empty">按「開資料夾」，或先「看範例」。</p></div>
+</main>
+<input id="pick" type="file" webkitdirectory hidden>
+<audio id="au"></audio>
+<script>
+var doc = null, dir = null, files = {}, cur = 0, au = document.getElementById('au');
+var LABEL = { todo: '待聽', ok: '通過', redo: '重做' };
+var $ = function (s) { return document.querySelector(s); };
+var esc = function (s) { return String(s || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+var live = function (kip) { return 'https://hapsing.ithuan.tw/bangtsam?taibun=' + encodeURIComponent(kip); };
+
+function seg(l) {   // 意傳分詞「淑｜siok 靜｜tsīng」→ 字上標讀音，看得出哪個字唸成什麼
+  if (!l.seg) return esc(l.hanzi);
+  return l.seg.split(' ').map(function (w) { var p = w.split('｜'); return p.length < 2 || !/[^\s，。！？、；：「」『』（）…—,.!?]/.test(p[0]) ? esc(p[0]) : '<ruby>' + esc(p[0].replace(/-/g, '')) + '<rt>' + esc(p[1]) + '</rt></ruby>'; }).join('');
+}
+function draftKey() { return 'tvd:' + (doc.title || ''); }
+function keep() { try { localStorage.setItem(draftKey(), JSON.stringify(doc)); } catch (e) {} }
+function stat() {
+  var n = { todo: 0, ok: 0, redo: 0 };
+  doc.lines.forEach(function (l) { n[l.status || 'todo']++; });
+  $('#stat').textContent = '共 ' + doc.lines.length + ' 句　通過 ' + n.ok + '　重做 ' + n.redo + '　待聽 ' + n.todo;
+}
+function render() {
+  $('#ttl').textContent = doc.title || '台語配音確認台';
+  $('#list').innerHTML = doc.lines.map(function (l, i) {
+    return '<section class="ln" data-i="' + i + '" data-s="' + (l.status || 'todo') + '">' +
+      '<div class="top"><b>' + esc(l.speaker) + '</b><span>' + esc(l.id) + '</span><span class="chip">' + LABEL[l.status || 'todo'] + '</span></div>' +
+      '<div class="seg">' + seg(l) + '</div>' + (l.zh ? '<div class="zh">' + esc(l.zh) + '</div>' : '') +
+      '<label>台語漢字（改了會清掉台羅，下次產音重新轉）</label><input data-k="hanzi" value="' + esc(l.hanzi) + '">' +
+      '<label>台羅（唸錯就改這裡，按「照台羅試聽」先聽）</label><input class="kip" data-k="kip" value="' + esc(l.kip) + '">' +
+      (l.kip ? '' : '<div class="stale">還沒有台羅，跑一次 voice.py</div>') +
+      '<label>備註（給 AI 看：哪裡唸錯、想要什麼語氣）</label><textarea data-k="note">' + esc(l.note) + '</textarea>' +
+      '<div class="btns"><button data-a="play">播音檔</button><button data-a="live">照台羅試聽</button>' +
+      '<button data-a="ok">通過</button><button data-a="redo">重做</button></div></section>';
+  }).join('');
+  stat(); focus(cur, true);
+}
+function focus(i, quiet) {
+  cur = Math.max(0, Math.min(doc.lines.length - 1, i));
+  document.querySelectorAll('.ln').forEach(function (s) { s.classList.toggle('on', +s.dataset.i === cur); });
+  var el = document.querySelector('.ln.on'); if (el && !quiet) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+async function src(l) {
+  if (!l.audio) return '';
+  if (files[l.audio]) return files[l.audio];
+  if (dir) {   // 從選的資料夾讀
+    try {
+      var h = dir, parts = l.audio.split('/');
+      for (var k = 0; k < parts.length - 1; k++) h = await h.getDirectoryHandle(parts[k]);
+      return files[l.audio] = URL.createObjectURL(await (await h.getFileHandle(parts[parts.length - 1])).getFile());
+    } catch (e) { return ''; }
+  }
+  return doc.base ? doc.base + l.audio : '';
+}
+async function play(i, how) {
+  var l = doc.lines[i], u = how === 'live' ? (l.kip ? live(l.kip) : '') : await src(l);
+  if (!u) { alert(how === 'live' ? '這句還沒有台羅' : '找不到音檔，先跑 voice.py，或按「照台羅試聽」'); return; }
+  au.src = u; au.play();
+}
+function mark(i, s) {
+  doc.lines[i].status = s; keep();
+  var el = document.querySelector('.ln[data-i="' + i + '"]'); el.dataset.s = s; el.querySelector('.chip').textContent = LABEL[s];
+  stat(); if (s === 'ok') focus(i + 1);
+}
+function load(d, from) {
+  doc = d; cur = 0; files = {};
+  try {
+    var old = JSON.parse(localStorage.getItem(draftKey()) || 'null');
+    if (old && JSON.stringify(old.lines) !== JSON.stringify(d.lines) && confirm('有上次沒存回的修改，要接著用嗎？\n（選「取消」就用' + from + '的版本）')) doc = old;
+  } catch (e) {}
+  render();
+}
+
+$('#list').addEventListener('click', function (e) {
+  var b = e.target.closest('button'), s = e.target.closest('.ln'); if (!s) return;
+  var i = +s.dataset.i; focus(i, true); if (!b) return;
+  var a = b.dataset.a; if (a === 'play' || a === 'live') play(i, a); else mark(i, a);
+});
+$('#list').addEventListener('input', function (e) {
+  var k = e.target.dataset.k; if (!k) return;
+  var s = e.target.closest('.ln'), l = doc.lines[+s.dataset.i];
+  l[k] = e.target.value;
+  if (k === 'hanzi') { l.kip = ''; l.seg = ''; s.querySelector('.kip').value = ''; s.querySelector('.seg').innerHTML = esc(l.hanzi); }
+  if (k === 'hanzi' || k === 'kip') { l.status = 'redo'; s.dataset.s = 'redo'; s.querySelector('.chip').textContent = LABEL.redo; stat(); }
+  keep();
+});
+document.addEventListener('keydown', function (e) {
+  if (!doc) return;
+  var typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName);
+  if (e.key === 'Escape') { document.activeElement.blur(); return; }
+  if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  var k = e.key.toLowerCase();
+  if (k === 'arrowdown' || k === 'j') focus(cur + 1);
+  else if (k === 'arrowup' || k === 'k') focus(cur - 1);
+  else if (k === ' ') play(cur, 'play');
+  else if (k === 't') play(cur, 'live');
+  else if (k === '1') mark(cur, 'ok');
+  else if (k === '2') mark(cur, 'redo');
+  else if (k === 'n') document.querySelector('.ln.on textarea').focus();
+  else return;
+  e.preventDefault();
+});
+
+$('#open').onclick = async function () {
+  if (!window.showDirectoryPicker) { $('#pick').click(); return; }   // Firefox、Safari：唯讀，存回改成下載
+  try {
+    dir = await showDirectoryPicker({ mode: 'readwrite' });
+    load(JSON.parse(await (await (await dir.getFileHandle('lines.json')).getFile()).text()), '資料夾');
+  } catch (e) { if (e.name !== 'AbortError') alert('讀不到 lines.json：' + e.message); }
+};
+$('#pick').onchange = async function () {
+  var fs = Array.from(this.files), j = fs.find(function (f) { return /(^|\/)lines\.json$/.test(f.webkitRelativePath) && f.webkitRelativePath.split('/').length === 2; });
+  if (!j) { alert('資料夾裡沒有 lines.json'); return; }
+  dir = null;
+  var d = JSON.parse(await j.text());
+  load(d, '資料夾');
+  fs.forEach(function (f) { files[f.webkitRelativePath.split('/').slice(1).join('/')] = URL.createObjectURL(f); });
+};
+$('#demo').onclick = async function () {
+  dir = null;
+  var d = await (await fetch('examples/ato/lines.json')).json();
+  d.base = 'examples/ato/';   // ponytail: 範例音檔不進 repo，播不到就按「照台羅試聽」
+  load(d, '範例');
+};
+$('#save').onclick = async function () {
+  if (!doc) return;
+  var out = Object.assign({}, doc); delete out.base;
+  var text = JSON.stringify(out, null, 1) + '\n';
+  if (dir) {
+    var w = await (await dir.getFileHandle('lines.json')).createWritable(); await w.write(text); await w.close();
+    try { localStorage.removeItem(draftKey()); } catch (e) {}
+    alert('已存回資料夾裡的 lines.json');
+  } else {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = 'lines.json'; a.click();
+  }
+};
+$('#ai').onclick = async function () {
+  if (!doc) return;
+  var r = doc.lines.filter(function (l) { return l.status === 'redo' || l.note; });
+  var t = (doc.title || '') + ' 台語配音確認結果：通過 ' + doc.lines.filter(function (l) { return l.status === 'ok'; }).length + ' 句，要處理 ' + r.length + ' 句。\n' +
+    '我已經把 lines.json 存回去了。status 是 redo 的句子：台羅空白就重新轉台羅再合成，有台羅就照台羅重新合成；備註寫的是唸錯的地方或想要的語氣。\n\n' +
+    r.map(function (l) { return '- ' + l.id + '［' + LABEL[l.status || 'todo'] + '］' + l.hanzi + '\n  台羅：' + (l.kip || '（空白，要重新轉）') + (l.note ? '\n  備註：' + l.note : ''); }).join('\n');
+  try { await navigator.clipboard.writeText(t); alert('複製好了，貼給 AI 就可以'); } catch (e) { prompt('複製這段：', t); }
+};
+</script>
+</body></html>
